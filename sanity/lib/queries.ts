@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache";
-import type { CategorySummary, Product } from "@/types/product";
 import { client } from "@/sanity/lib/client";
+import type { CategorySummary, Product } from "@/types/product";
+import type { Service, ServiceSummary } from "@/types/service";
 
 // ───────── Ortak alan listeleri ─────────
 
@@ -31,6 +32,13 @@ const CATEGORY_FIELDS = `
   image{ ${IMAGE_FIELDS} }
 `;
 
+const SERVICE_SUMMARY_FIELDS = `
+  "id": _id,
+  title,
+  "slug": slug.current,
+  summary
+`;
+
 // ───────── Sorgular ─────────
 
 export const PRODUCTS_QUERY = `*[_type == "product" && defined(slug.current)]
@@ -50,9 +58,22 @@ const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == $slug][
 
 const CATEGORY_SLUGS_QUERY = `*[_type == "category" && defined(slug.current)].slug.current`;
 
+const SERVICES_QUERY = `*[_type == "service" && defined(slug.current)]
+  | order(coalesce(order, 999) asc, title asc) { ${SERVICE_SUMMARY_FIELDS} }`;
+
+const SERVICE_BY_SLUG_QUERY = `*[_type == "service" && slug.current == $slug][0] {
+  ${SERVICE_SUMMARY_FIELDS},
+  "content": coalesce(content, []),
+  seoTitle,
+  seoDescription
+}`;
+
+const SERVICE_SLUGS_QUERY = `*[_type == "service" && defined(slug.current)].slug.current`;
+
 const SITEMAP_QUERY = `{
   "products": *[_type == "product" && defined(slug.current)]{ "slug": slug.current, "updatedAt": _updatedAt },
-  "categories": *[_type == "category" && defined(slug.current)]{ "slug": slug.current, "updatedAt": _updatedAt }
+  "categories": *[_type == "category" && defined(slug.current)]{ "slug": slug.current, "updatedAt": _updatedAt },
+  "services": *[_type == "service" && defined(slug.current)]{ "slug": slug.current, "updatedAt": _updatedAt }
 }`;
 
 // ───────── Veri çekme fonksiyonları ─────────
@@ -103,6 +124,24 @@ export async function getCategoryBySlug(
   return client.fetch<CategorySummary | null>(CATEGORY_BY_SLUG_QUERY, { slug });
 }
 
+/** Tüm hizmetler (liste sayfası için). */
+export async function getServices(): Promise<ServiceSummary[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("services");
+
+  return client.fetch<ServiceSummary[]>(SERVICES_QUERY);
+}
+
+/** Tek bir hizmetin detayı: makale metni ve SEO alanlarıyla birlikte. */
+export async function getServiceBySlug(slug: string): Promise<Service | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("services");
+
+  return client.fetch<Service | null>(SERVICE_BY_SLUG_QUERY, { slug });
+}
+
 /**
  * Build sırasında hangi sayfaların önceden üretileceğini belirler.
  * Sanity'ye ulaşılamazsa boş liste döner, build bu yüzden çökmez.
@@ -133,26 +172,39 @@ export async function getCategorySlugs(): Promise<string[]> {
   }
 }
 
+export async function getServiceSlugs(): Promise<string[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("services");
+
+  try {
+    return await client.fetch<string[]>(SERVICE_SLUGS_QUERY);
+  } catch (error) {
+    console.error("Hizmet slug'ları alınamadı:", error);
+    return [];
+  }
+}
+
 export interface SitemapItem {
   slug: string;
   updatedAt: string;
 }
 
-export async function getSitemapData(): Promise<{
+export interface SitemapData {
   products: SitemapItem[];
   categories: SitemapItem[];
-}> {
+  services: SitemapItem[];
+}
+
+export async function getSitemapData(): Promise<SitemapData> {
   "use cache";
   cacheLife("minutes");
-  cacheTag("products", "categories");
+  cacheTag("products", "categories", "services");
 
   try {
-    return await client.fetch<{
-      products: SitemapItem[];
-      categories: SitemapItem[];
-    }>(SITEMAP_QUERY);
+    return await client.fetch<SitemapData>(SITEMAP_QUERY);
   } catch (error) {
     console.error("Sitemap verisi alınamadı:", error);
-    return { products: [], categories: [] };
+    return { products: [], categories: [], services: [] };
   }
 }

@@ -6,15 +6,24 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 
 // Adres: https://spotcudogan.com/sitemap.xml  (Google Search Console'a bu adresi gönderin)
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { products, categories } = await getSitemapData();
+  const { products, categories, services } = await getSitemapData();
 
-  const home: SitemapEntry = {
-    url: SITE_URL,
-    changeFrequency: "daily",
-    priority: 1,
-  };
+  const staticPages: SitemapEntry[] = [
+    { url: SITE_URL, changeFrequency: "daily", priority: 1 },
+    { url: `${SITE_URL}/hizmetler`, changeFrequency: "weekly", priority: 0.9 },
+  ];
 
-  // Dinamik kategori ve hizmet sayfaları
+  // Dinamik hizmet (makale) sayfaları
+  const serviceEntries = services.map(
+    (item): SitemapEntry => ({
+      url: `${SITE_URL}/hizmetler/${item.slug}`,
+      lastModified: new Date(item.updatedAt),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    }),
+  );
+
+  // Dinamik kategori sayfaları
   const categoryEntries = categories.map(
     (item): SitemapEntry => ({
       url: `${SITE_URL}/kategori/${item.slug}`,
@@ -34,5 +43,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return [home, ...categoryEntries, ...productEntries];
+  return [...staticPages, ...serviceEntries, ...categoryEntries, ...productEntries];
 }
