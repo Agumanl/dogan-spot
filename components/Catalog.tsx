@@ -4,60 +4,76 @@ import { useMemo, useState } from "react";
 import { Fraunces } from "next/font/google";
 import { ProductCard } from "@/components/ProductCard";
 import { WHATSAPP_NUMBER } from "@/lib/site";
-import { CATEGORIES, type Category, type Product } from "@/types/product";
+import type { CategorySummary, Product } from "@/types/product";
 
 const serif = Fraunces({
   subsets: ["latin", "latin-ext"],
   display: "swap",
 });
 
-type CategoryFilter = Category | "Tümü";
 type SortKey = "newest" | "price-asc" | "price-desc";
+
+const ALL = "all";
 
 const normalize = (value: string) => value.toLocaleLowerCase("tr-TR").trim();
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2C1A1D]";
 
+// Kaydırma çubuğunu gizler (ek CSS gerekmez)
+const noScrollbar =
+  "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+
 interface CatalogProps {
   /** Sanity'den sunucuda çekilmiş ürünler */
   products: Product[];
+  /** Filtre çipleri için ürün kategorileri */
+  categories: CategorySummary[];
   /** Sanity'ye ulaşılamadıysa true */
   loadFailed?: boolean;
 }
 
-export function Catalog({ products, loadFailed = false }: CatalogProps) {
-  const [category, setCategory] = useState<CategoryFilter>("Tümü");
+export function Catalog({
+  products,
+  categories,
+  loadFailed = false,
+}: CatalogProps) {
+  const [category, setCategory] = useState<string>(ALL);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
 
-  // 1) Arama: başlık, açıklama, marka ve kategori içinde (Türkçe karakter duyarlı)
+  // 1) Arama: başlık, açıklama, marka ve kategori adında (Türkçe karakter duyarlı)
   const searched = useMemo(() => {
     const q = normalize(query);
     if (!q) return products;
     return products.filter((p) =>
       normalize(
-        [p.title, p.description, p.brand ?? "", p.category].join(" "),
+        [p.title, p.description, p.brand ?? "", p.category?.title ?? ""].join(
+          " ",
+        ),
       ).includes(q),
     );
   }, [products, query]);
 
   // 2) Kategori çiplerindeki sayılar
   const counts = useMemo(() => {
-    const map = new Map<CategoryFilter, number>();
-    map.set("Tümü", searched.length);
-    CATEGORIES.forEach((c) =>
-      map.set(c, searched.filter((p) => p.category === c).length),
+    const map = new Map<string, number>();
+    map.set(ALL, searched.length);
+    categories.forEach((c) =>
+      map.set(
+        c.slug,
+        searched.filter((p) => p.category?.slug === c.slug).length,
+      ),
     );
     return map;
-  }, [searched]);
+  }, [searched, categories]);
 
   // 3) Kategori filtresi + sıralama
   const visible = useMemo(() => {
     const list =
-      category === "Tümü"
+      category === ALL
         ? [...searched]
-        : searched.filter((p) => p.category === category);
+        : searched.filter((p) => p.category?.slug === category);
 
     switch (sort) {
       case "price-asc":
@@ -71,10 +87,11 @@ export function Catalog({ products, loadFailed = false }: CatalogProps) {
 
   const resetFilters = () => {
     setQuery("");
-    setCategory("Tümü");
+    setCategory(ALL);
   };
 
   const hasProducts = products.length > 0;
+  const chips = [{ slug: ALL, title: "Tümü" }, ...categories];
 
   return (
     <section
@@ -88,7 +105,7 @@ export function Catalog({ products, loadFailed = false }: CatalogProps) {
             id="urunler-baslik"
             className={`${serif.className} text-3xl font-semibold tracking-tight`}
           >
-            Kategoriler ve ürünler
+            Satılık ürünler
           </h2>
           <p className="mt-1 text-sm text-[#2C1A1D]/65" aria-live="polite">
             {visible.length} ürün listeleniyor
@@ -144,27 +161,27 @@ export function Catalog({ products, loadFailed = false }: CatalogProps) {
         </div>
       </form>
 
-      {/* Kategori filtreleri */}
+      {/* Kategori filtreleri: mobilde parmakla yatay kaydırılır, sayfa yalpalamaz */}
       <div
         role="group"
         aria-label="Kategoriye göre filtrele"
-        className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-2"
+        className={`-mx-4 mt-4 flex snap-x gap-2 overflow-x-auto overscroll-x-contain px-4 pb-2 ${noScrollbar}`}
       >
-        {(["Tümü", ...CATEGORIES] as CategoryFilter[]).map((c) => {
-          const active = category === c;
+        {chips.map((chip) => {
+          const active = category === chip.slug;
           return (
             <button
-              key={c}
+              key={chip.slug}
               type="button"
-              onClick={() => setCategory(c)}
+              onClick={() => setCategory(chip.slug)}
               aria-pressed={active}
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${focusRing} ${
+              className={`inline-flex shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${focusRing} ${
                 active
                   ? "border-[#2C1A1D] bg-[#2C1A1D] text-[#F5EBE0]"
                   : "border-[#2C1A1D]/15 bg-white text-[#2C1A1D] hover:border-[#8D6E63]"
               }`}
             >
-              {c}
+              {chip.title}
               <span
                 className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
                   active
@@ -172,7 +189,7 @@ export function Catalog({ products, loadFailed = false }: CatalogProps) {
                     : "bg-[#F5EBE0] text-[#2C1A1D]/70"
                 }`}
               >
-                {counts.get(c) ?? 0}
+                {counts.get(chip.slug) ?? 0}
               </span>
             </button>
           );

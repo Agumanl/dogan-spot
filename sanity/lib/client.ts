@@ -5,6 +5,7 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  // Yayınlanmış içerik için CDN kullan (hızlı). Anlık önizleme gerekirse false yapın.
+  // CDN kapalı: istekler doğrudan Sanity API'sine gider, eski önbellek yanıtı gelmez.
+  // Ürünler zaten Next.js tarafında "use cache" ile önbelleğe alınıyor.
   useCdn: false,
 });

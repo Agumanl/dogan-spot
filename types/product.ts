@@ -1,21 +1,13 @@
-// Bu listeler, Sanity şemasındaki (sanity/schemaTypes/product.ts) seçeneklerle birebir aynı olmalı.
-export const CATEGORIES = [
-  "Mobilya",
-  "Beyaz Eşya",
-  "Elektronik",
-  "Ev & Mutfak",
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
-
+// Bu liste, Sanity ürün şemasındaki (sanity/schemaTypes/product.ts) seçeneklerle birebir aynı olmalı.
 export const CONDITIONS = [
+  "Sıfır / Kutulu",
   "Sıfır Ayarında",
-  "Çok İyi Durumda",
-  "İyi Durumda",
-  "Orta Durumda",
+  "İkinci El - Temiz",
 ] as const;
 
 export type Condition = (typeof CONDITIONS)[number];
+
+export type CategoryType = "product" | "service";
 
 /** Sanity'den gelen görsel nesnesi (urlFor bu nesneyi URL'ye çevirir). */
 export interface ProductImage {
@@ -31,29 +23,36 @@ export interface ProductImage {
   } | null;
 }
 
-/** GROQ sorgusunun (sanity/lib/queries.ts) döndürdüğü ürün. */
-// types/product.ts
+/** Sanity'deki kategori belgesi (ürün kategorisi ya da hizmet). */
 export interface CategorySummary {
-  _id?: string
-  id?: string
-  title: string
-  slug: string
-  description?: string
-  image?: string
-  imageUrl?: string
-  categoryType?: 'product' | 'service'
+  id: string;
+  title: string;
+  slug: string;
+  categoryType: CategoryType;
+  description?: string | null;
+  image?: ProductImage | null;
 }
 
+/** Ürünün içinde gelen kısa kategori bilgisi. */
+export type CategoryRef = Pick<
+  CategorySummary,
+  "id" | "title" | "slug" | "categoryType"
+>;
+
+/** GROQ sorgusunun (sanity/lib/queries.ts) döndürdüğü ürün. */
 export interface Product {
-  _id?: string
-  id?: string
-  title: string
-  slug: string
-  price: number | string
-  condition?: string
-  description?: string
-  imageUrl?: string
-  mainImage?: any
-  gallery?: any[]
-  category?: any
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  condition: Condition;
+  price: number;
+  oldPrice?: number | null;
+  brand?: string | null;
+  age?: string | null;
+  mainImage?: ProductImage | null;
+  gallery: ProductImage[];
+  category: CategoryRef | null;
+  /** ISO tarih, "En yeni" sıralaması için (Sanity'nin _createdAt alanı) */
+  createdAt: string;
 }

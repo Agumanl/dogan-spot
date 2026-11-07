@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { WHATSAPP_NUMBER } from "@/lib/site";
+import type { CategorySummary } from "@/types/product";
 
 const logoFont = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
@@ -11,14 +12,18 @@ const logoFont = Plus_Jakarta_Sans({
 });
 
 const NAV_LINKS = [
-  { label: "Kategoriler", href: "#urunler" },
-  { label: "Hakkımızda", href: "#hakkimizda" },
-  { label: "İletişim", href: "#iletisim" },
+  { label: "Kategoriler", href: "/#kategoriler" },
+  { label: "Hizmetler", href: "/#hizmetler" },
+  { label: "Hakkımızda", href: "/#hakkimizda" },
+  { label: "İletişim", href: "/#iletisim" },
 ];
 
 const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
   "Merhaba, Doğan Spot'tan bilgi almak istiyorum.",
 )}`;
+
+/** Menüde ihtiyaç duyulan en küçük kategori bilgisi. */
+type HeaderCategory = Pick<CategorySummary, "title" | "slug" | "categoryType">;
 
 /**
  * Doğan Spot monogramı: koyu kahve zemin üzerinde krem "D" harfi,
@@ -33,7 +38,6 @@ export function LogoMark({ className = "h-10 w-10" }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      {/* Zemin */}
       <rect
         x="0.75"
         y="0.75"
@@ -44,14 +48,12 @@ export function LogoMark({ className = "h-10 w-10" }: { className?: string }) {
         stroke="#8D6E63"
         strokeWidth="1.5"
       />
-      {/* D */}
       <path
         d="M14 11.5h8.5c7.2 0 12.5 5.2 12.5 12.5s-5.3 12.5-12.5 12.5H14v-25Z"
         stroke="#F5EBE0"
         strokeWidth="3"
         strokeLinejoin="round"
       />
-      {/* S */}
       <path
         d="M28.5 19.2c-1.1-1.7-2.9-2.6-5-2.6-2.9 0-4.7 1.5-4.7 3.5 0 5.2 10.4 2.6 10.4 8 0 2.2-2 3.8-5 3.8-2.4 0-4.4-.9-5.7-2.6"
         stroke="#F5EBE0"
@@ -65,10 +67,10 @@ export function LogoMark({ className = "h-10 w-10" }: { className?: string }) {
 /** Logo ikonu + "Doğan Spot" yazısı: iki kelime aynı font, ağırlık ve renkte. */
 export function Logo() {
   return (
-    <span className="flex items-center gap-3">
-      <LogoMark />
+    <span className="flex items-center gap-2.5 sm:gap-3">
+      <LogoMark className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
       <span
-        className={`${logoFont.className} text-[1.3rem] font-semibold leading-none tracking-[-0.01em] text-[#F5EBE0]`}
+        className={`${logoFont.className} whitespace-nowrap text-[1.1rem] font-semibold leading-none tracking-[-0.01em] text-[#F5EBE0] sm:text-[1.3rem]`}
       >
         Doğan Spot
       </span>
@@ -80,7 +82,7 @@ function WhatsAppIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-5 w-5 fill-current"
+      className="h-5 w-5 shrink-0 fill-current"
       aria-hidden="true"
       focusable="false"
     >
@@ -89,7 +91,12 @@ function WhatsAppIcon() {
   );
 }
 
-export function Header() {
+interface HeaderProps {
+  /** Sanity'den gelen kategoriler. Mobilde kaydırılabilir bir şerit olarak gösterilir. */
+  categories?: HeaderCategory[];
+}
+
+export function Header({ categories = [] }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -114,26 +121,30 @@ export function Header() {
   const focusRing =
     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5EBE0]";
 
+  // Kaydırma çubuğunu gizler (ek CSS gerekmez)
+  const noScrollbar =
+    "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+
   return (
     <header
-      className={`sticky top-0 z-40 bg-[#2C1A1D] text-[#F5EBE0] transition-shadow ${
+      className={`sticky top-0 z-40 w-full bg-[#2C1A1D] text-[#F5EBE0] transition-shadow ${
         scrolled || open ? "shadow-[0_10px_24px_-14px_rgba(0,0,0,0.6)]" : ""
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 md:h-[72px]">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 lg:h-[72px]">
         <a
-          href="#"
+          href="/"
           aria-label="Doğan Spot ana sayfa"
           onClick={() => setOpen(false)}
-          className={`rounded-lg ${focusRing}`}
+          className={`min-w-0 rounded-lg ${focusRing}`}
         >
           <Logo />
         </a>
 
-        {/* Masaüstü menü */}
+        {/* Masaüstü menü (lg ve üstü) */}
         <nav
           aria-label="Ana menü"
-          className="ml-auto mr-2 hidden items-center gap-1 md:flex"
+          className="ml-auto mr-2 hidden items-center gap-1 lg:flex"
         >
           {NAV_LINKS.map((link) => (
             <a
@@ -146,16 +157,17 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Mobilde yalnızca ikon, sm ve üstünde yazılı */}
           <a
             href={WHATSAPP_HREF}
             target="_blank"
             rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 rounded-xl bg-[#F5EBE0] px-4 py-2.5 text-sm font-semibold text-[#2C1A1D] transition-colors hover:bg-white ${focusRing}`}
+            aria-label="WhatsApp ile ulaşın"
+            className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#F5EBE0] px-2.5 text-sm font-semibold text-[#2C1A1D] transition-colors hover:bg-white sm:px-4 ${focusRing}`}
           >
             <WhatsAppIcon />
             <span className="hidden sm:inline">WhatsApp ile Ulaşın</span>
-            <span className="sm:hidden">WhatsApp</span>
           </a>
 
           {/* Mobil menü düğmesi */}
@@ -165,7 +177,7 @@ export function Header() {
             aria-expanded={open}
             aria-controls="mobil-menu"
             aria-label={open ? "Menüyü kapat" : "Menüyü aç"}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#F5EBE0] hover:bg-[#F5EBE0]/10 md:hidden ${focusRing}`}
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#F5EBE0] hover:bg-[#F5EBE0]/10 lg:hidden ${focusRing}`}
           >
             <svg
               viewBox="0 0 24 24"
@@ -184,11 +196,38 @@ export function Header() {
         </div>
       </div>
 
+      {/* Mobil kategori şeridi: parmakla sağa-sola kaydırılır, sayfa yalpalamaz */}
+      {categories.length > 0 && (
+        <nav
+          aria-label="Kategoriler"
+          className="border-t border-[#F5EBE0]/10 lg:hidden"
+        >
+          <ul
+            className={`flex snap-x gap-2 overflow-x-auto overscroll-x-contain px-4 py-2.5 ${noScrollbar}`}
+          >
+            {categories.map((category) => (
+              <li key={category.slug} className="shrink-0 snap-start">
+                <a
+                  href={`/kategori/${category.slug}`}
+                  className={`inline-flex whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${focusRing} ${
+                    category.categoryType === "service"
+                      ? "border-[#8D6E63] bg-[#8D6E63]/25 text-[#F5EBE0] hover:bg-[#8D6E63]/40"
+                      : "border-[#F5EBE0]/25 text-[#F5EBE0]/90 hover:bg-[#F5EBE0]/10"
+                  }`}
+                >
+                  {category.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
       {/* Mobil menü paneli */}
       {open && (
         <div
           id="mobil-menu"
-          className="border-t border-[#F5EBE0]/10 bg-[#2C1A1D] md:hidden"
+          className="border-t border-[#F5EBE0]/10 bg-[#2C1A1D] lg:hidden"
         >
           <nav
             aria-label="Mobil menü"

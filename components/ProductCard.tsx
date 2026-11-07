@@ -1,36 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import type { Category, Condition, Product } from "@/types/product";
+import Link from "next/link";
+import type { Product } from "@/types/product";
+import { conditionBadgeClass } from "@/lib/condition";
+import { formatPrice } from "@/lib/format";
+import { getProductImages } from "@/lib/product-images";
 import { WHATSAPP_NUMBER } from "@/lib/site";
 import { productImageUrl } from "@/sanity/lib/image";
-
-const priceFormatter = new Intl.NumberFormat("tr-TR", {
-  style: "currency",
-  currency: "TRY",
-  maximumFractionDigits: 0,
-});
-
-const conditionStyles: Record<Condition, string> = {
-  "Sıfır Ayarında": "bg-[#DDF3E4] text-[#14532D]",
-  "Çok İyi Durumda": "bg-[#F5EBE0] text-[#2C1A1D]",
-  "İyi Durumda": "bg-[#F1E4D8] text-[#5C3D2E]",
-  "Orta Durumda": "bg-[#EBDDD3] text-[#6B3B1E]",
-};
-
-const categoryEmoji: Record<Category, string> = {
-  Mobilya: "🛋️",
-  "Beyaz Eşya": "🧊",
-  Elektronik: "📺",
-  "Ev & Mutfak": "🍳",
-};
 
 // Kartta 4:3 oran kullanılır. Üç farklı genişlikte görsel üretilir (srcSet).
 const IMAGE_WIDTHS = [480, 800, 1200] as const;
 const ratioHeight = (w: number) => Math.round((w * 3) / 4);
 
 function buildWhatsAppLink(product: Product) {
-  const message = `Merhaba, "${product.title}" (${priceFormatter.format(
+  const message = `Merhaba, "${product.title}" (${formatPrice(
     product.price,
   )}) ürünü hakkında bilgi almak istiyorum. Hâlâ satışta mı?`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -43,11 +27,11 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
 
-  const cover = product.images?.[0];
-  const showImage = Boolean(cover?.asset) && !imageFailed;
+  const cover = getProductImages(product)[0];
+  const showImage = Boolean(cover) && !imageFailed;
 
-  const imageSrc = cover?.asset ? productImageUrl(cover, 800, ratioHeight(800)) : "";
-  const imageSrcSet = cover?.asset
+  const imageSrc = cover ? productImageUrl(cover, 800, ratioHeight(800)) : "";
+  const imageSrcSet = cover
     ? IMAGE_WIDTHS.map(
         (w) => `${productImageUrl(cover, w, ratioHeight(w))} ${w}w`,
       ).join(", ")
@@ -59,9 +43,10 @@ export function ProductCard({ product }: ProductCardProps) {
       : null;
 
   const meta = [product.brand, product.age].filter(Boolean).join(", ");
+  const categoryTitle = product.category?.title;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#2C1A1D]/10 bg-white transition-shadow hover:shadow-[0_12px_32px_-16px_rgba(44,26,29,0.4)] focus-within:shadow-[0_12px_32px_-16px_rgba(44,26,29,0.4)]">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#2C1A1D]/10 bg-white transition-shadow hover:shadow-[0_12px_32px_-16px_rgba(44,26,29,0.4)] focus-within:shadow-[0_12px_32px_-16px_rgba(44,26,29,0.4)]">
       {/* Görsel */}
       <div className="relative aspect-[4/3] overflow-hidden bg-[#F5EBE0]">
         {showImage ? (
@@ -82,19 +67,17 @@ export function ProductCard({ product }: ProductCardProps) {
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-2 text-[#2C1A1D]/55"
             role="img"
-            aria-label={`${product.category} kategorisi, görsel yok`}
+            aria-label="Görsel yok"
           >
             <span className="text-5xl" aria-hidden="true">
-              {categoryEmoji[product.category] ?? "📦"}
+              📦
             </span>
             <span className="text-xs font-medium">Görsel yakında</span>
           </div>
         )}
 
         <span
-          className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
-            conditionStyles[product.condition] ?? "bg-[#F5EBE0] text-[#2C1A1D]"
-          }`}
+          className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${conditionBadgeClass(product.condition)}`}
         >
           {product.condition}
         </span>
@@ -103,12 +86,19 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* İçerik */}
       <div className="flex flex-1 flex-col p-4">
         <p className="text-xs font-medium text-[#2C1A1D]/55">
-          {product.category}
-          {meta && ` · ${meta}`}
+          {categoryTitle}
+          {categoryTitle && meta && " · "}
+          {meta}
         </p>
 
         <h3 className="mt-1 text-base font-semibold leading-snug text-[#2C1A1D]">
-          {product.title}
+          {/* after:inset-0 ile kartın tamamı bu bağlantıya tıklanabilir olur */}
+          <Link
+            href={`/urun/${product.slug}`}
+            className="after:absolute after:inset-0 after:content-[''] hover:underline"
+          >
+            {product.title}
+          </Link>
         </h3>
 
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#2C1A1D]/70">
@@ -124,14 +114,14 @@ export function ProductCard({ product }: ProductCardProps) {
                 className="absolute left-2.5 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[#F5EBE0]"
               />
               <span className="text-lg font-bold tabular-nums">
-                {priceFormatter.format(product.price)}
+                {formatPrice(product.price)}
               </span>
             </div>
 
             {product.oldPrice ? (
               <div className="text-right">
                 <span className="block text-sm tabular-nums text-[#2C1A1D]/45 line-through">
-                  {priceFormatter.format(product.oldPrice)}
+                  {formatPrice(product.oldPrice)}
                 </span>
                 {discount !== null && (
                   <span className="text-xs font-semibold text-[#8D6E63]">
@@ -147,7 +137,7 @@ export function ProductCard({ product }: ProductCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${product.title} için WhatsApp'tan bilgi al`}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#128A3E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16A34A]"
+            className="relative z-10 mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#128A3E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#16A34A]"
           >
             <svg
               viewBox="0 0 24 24"

@@ -1,18 +1,11 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { turkishSlugify } from "./slugify";
 
-// Bu değerler, sitedeki types/product.ts ile birebir aynı olmalı.
-const CATEGORY_LIST = [
-  { title: "Mobilya", value: "Mobilya" },
-  { title: "Beyaz Eşya", value: "Beyaz Eşya" },
-  { title: "Elektronik", value: "Elektronik" },
-  { title: "Ev & Mutfak", value: "Ev & Mutfak" },
-];
-
+// Bu değerler, sitedeki types/product.ts içindeki CONDITIONS ile birebir aynı olmalı.
 const CONDITION_LIST = [
+  { title: "Sıfır / Kutulu", value: "Sıfır / Kutulu" },
   { title: "Sıfır Ayarında", value: "Sıfır Ayarında" },
-  { title: "Çok İyi Durumda", value: "Çok İyi Durumda" },
-  { title: "İyi Durumda", value: "İyi Durumda" },
-  { title: "Orta Durumda", value: "Orta Durumda" },
+  { title: "İkinci El - Temiz", value: "İkinci El - Temiz" },
 ];
 
 export const productType = defineType({
@@ -32,7 +25,23 @@ export const productType = defineType({
       title: "Slug (URL)",
       type: "slug",
       description: "Başlıktan otomatik üretilir. 'Generate' düğmesine basın.",
-      options: { source: "title", maxLength: 96 },
+      options: { source: "title", maxLength: 96, slugify: turkishSlugify },
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "category",
+      title: "Kategori",
+      type: "reference",
+      to: [{ type: "category" }],
+      // Yalnızca "Ürünler" türündeki kategoriler seçilebilir
+      options: { filter: 'categoryType == "product"' },
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "condition",
+      title: "Durum",
+      type: "string",
+      options: { list: CONDITION_LIST, layout: "radio" },
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -45,7 +54,8 @@ export const productType = defineType({
       name: "oldPrice",
       title: "Eski Fiyat (₺)",
       type: "number",
-      description: "İsteğe bağlı. Doluysa kartta üstü çizili eski fiyat ve indirim yüzdesi görünür.",
+      description:
+        "İsteğe bağlı. Doluysa üstü çizili eski fiyat ve indirim yüzdesi görünür.",
       validation: (rule) =>
         rule.min(0).custom((value, context) => {
           const price = (context.document as { price?: number } | undefined)
@@ -61,18 +71,48 @@ export const productType = defineType({
         }),
     }),
     defineField({
-      name: "category",
-      title: "Kategori",
-      type: "string",
-      options: { list: CATEGORY_LIST },
+      name: "description",
+      title: "Açıklama",
+      type: "text",
+      rows: 6,
+      description: "Kusurlar, ölçüler ve kullanım izlerini açıkça yazın.",
+      validation: (rule) => rule.required().min(10).max(1500),
+    }),
+    defineField({
+      name: "mainImage",
+      title: "Ana Görsel",
+      type: "image",
+      options: { hotspot: true },
+      fields: [
+        defineField({
+          name: "alt",
+          title: "Alternatif metin",
+          type: "string",
+          description: "Görseli kısaca tarif edin (erişilebilirlik ve SEO için).",
+        }),
+      ],
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: "condition",
-      title: "Durum",
-      type: "string",
-      options: { list: CONDITION_LIST, layout: "radio" },
-      validation: (rule) => rule.required(),
+      name: "gallery",
+      title: "Galeri",
+      type: "array",
+      of: [
+        defineArrayMember({
+          type: "image",
+          options: { hotspot: true },
+          fields: [
+            defineField({
+              name: "alt",
+              title: "Alternatif metin",
+              type: "string",
+            }),
+          ],
+        }),
+      ],
+      options: { layout: "grid" },
+      description: "İsteğe bağlı ek fotoğraflar (en fazla 8).",
+      validation: (rule) => rule.max(8),
     }),
     defineField({
       name: "brand",
@@ -85,36 +125,6 @@ export const productType = defineType({
       title: "Ürün Yaşı",
       type: "string",
       description: "İsteğe bağlı. Örn: 2 yıllık",
-    }),
-    defineField({
-      name: "description",
-      title: "Açıklama",
-      type: "text",
-      rows: 4,
-      description: "Kusurlar, ölçüler ve kullanım izlerini açıkça yazın.",
-      validation: (rule) => rule.required().min(10).max(500),
-    }),
-    defineField({
-      name: "images",
-      title: "Ürün Fotoğrafları",
-      type: "array",
-      of: [
-        defineArrayMember({
-          type: "image",
-          options: { hotspot: true },
-          fields: [
-            defineField({
-              name: "alt",
-              title: "Alternatif metin",
-              type: "string",
-              description: "Görseli kısaca tarif edin (erişilebilirlik ve SEO için).",
-            }),
-          ],
-        }),
-      ],
-      options: { layout: "grid" },
-      description: "İlk fotoğraf kapak görseli olarak kullanılır.",
-      validation: (rule) => rule.required().min(1).max(10),
     }),
   ],
 
@@ -136,16 +146,19 @@ export const productType = defineType({
       title: "title",
       price: "price",
       condition: "condition",
-      media: "images.0",
+      categoryTitle: "category.title",
+      media: "mainImage",
     },
-    prepare({ title, price, condition, media }) {
+    prepare({ title, price, condition, categoryTitle, media }) {
       const priceText =
         typeof price === "number"
           ? `${price.toLocaleString("tr-TR")} ₺`
           : "Fiyat girilmemiş";
       return {
         title,
-        subtitle: [condition, priceText].filter(Boolean).join(" · "),
+        subtitle: [categoryTitle, condition, priceText]
+          .filter(Boolean)
+          .join(" · "),
         media,
       };
     },
