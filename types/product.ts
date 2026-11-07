@@ -47,3 +47,11 @@ export interface Product {
   /** ISO tarih, "En yeni" sıralaması için (Sanity'nin _createdAt alanı) */
   createdAt: string;
 }
+export interface CategorySummary {
+  _id?: string
+  title: string
+  slug: string
+  description?: string
+  imageUrl?: string
+  categoryType?: 'product' | 'service'
+}
