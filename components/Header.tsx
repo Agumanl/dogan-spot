@@ -13,7 +13,7 @@ const logoFont = Plus_Jakarta_Sans({
 
 const NAV_LINKS = [
   { label: "Kategoriler", href: "/#kategoriler" },
-  { label: "Hizmetler", href: "/#hizmetler" },
+  { label: "Hizmetler", href: "/hizmetler" },
   { label: "Hakkımızda", href: "/#hakkimizda" },
   { label: "İletişim", href: "/#iletisim" },
 ];
