@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import type { CategorySummary, Product } from "@/types/product";
-import { client } from "./client";
+import { client } from "@/sanity/lib/client";
 
 // ───────── Ortak alan listeleri ─────────
 
