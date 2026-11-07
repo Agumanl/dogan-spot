@@ -6,5 +6,5 @@ export const client = createClient({
   dataset,
   apiVersion,
   // Yayınlanmış içerik için CDN kullan (hızlı). Anlık önizleme gerekirse false yapın.
-  useCdn: true,
+  useCdn: false,
 });
