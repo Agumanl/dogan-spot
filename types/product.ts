@@ -32,26 +32,28 @@ export interface ProductImage {
 }
 
 /** GROQ sorgusunun (sanity/lib/queries.ts) döndürdüğü ürün. */
-export interface Product {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  category: Category;
-  condition: Condition;
-  price: number;
-  oldPrice?: number | null;
-  brand?: string | null;
-  age?: string | null;
-  images: ProductImage[];
-  /** ISO tarih, "En yeni" sıralaması için (Sanity'nin _createdAt alanı) */
-  createdAt: string;
-}
+// types/product.ts
 export interface CategorySummary {
   _id?: string
+  id?: string
   title: string
   slug: string
   description?: string
+  image?: string
   imageUrl?: string
   categoryType?: 'product' | 'service'
+}
+
+export interface Product {
+  _id?: string
+  id?: string
+  title: string
+  slug: string
+  price: number | string
+  condition?: string
+  description?: string
+  imageUrl?: string
+  mainImage?: any
+  gallery?: any[]
+  category?: any
 }

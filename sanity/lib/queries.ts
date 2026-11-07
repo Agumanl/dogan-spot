@@ -1,32 +1,36 @@
-import { cacheLife, cacheTag } from "next/cache";
-import type { Product } from "@/types/product";
-import { client } from "./client";
+// sanity/lib/queries.ts
+import { client } from './client'
 
-/** Yayınlanmış tüm ürünler, en yeni en üstte. */
-export const PRODUCTS_QUERY = `*[_type == "product" && defined(slug.current)]
-  | order(_createdAt desc) {
-    "id": _id,
-    "slug": slug.current,
-    title,
-    description,
-    category,
-    condition,
-    price,
-    oldPrice,
-    brand,
-    age,
-    "createdAt": _createdAt,
-    "images": coalesce(images[]{ _key, alt, asset, hotspot, crop }, [])
-  }`;
+export async function getCategories() {
+  return client.fetch(`*[_type == "category"]{ _id, title, "slug": slug.current, description, "image": image.asset->url, categoryType }`)
+}
 
-/**
- * Next.js 16 `cacheComponents` modu açık olduğu için veri çekme işlemi
- * "use cache" ile önbelleğe alınır. Yeni eklenen ürünler birkaç dakika içinde görünür.
- */
-export async function getProducts(): Promise<Product[]> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("products");
+export async function getCategoryBySlug(slug: string) {
+  return client.fetch(`*[_type == "category" && slug.current == $slug][0]{ _id, title, "slug": slug.current, description, "image": image.asset->url, categoryType }`, { slug })
+}
 
-  return client.fetch<Product[]>(PRODUCTS_QUERY);
+export async function getCategorySlugs() {
+  return client.fetch(`*[_type == "category"]{ "slug": slug.current }`)
+}
+
+export async function getProductsByCategorySlug(slug: string) {
+  return client.fetch(`*[_type == "product" && references(*[_type == "category" && slug.current == $slug]._id)]{ _id, title, "slug": slug.current, price, condition, "imageUrl": mainImage.asset->url }`, { slug })
+}
+
+export async function getProductBySlug(slug: string) {
+  return client.fetch(`*[_type == "product" && slug.current == $slug][0]{ _id, title, "slug": slug.current, price, condition, description, "imageUrl": mainImage.asset->url }`, { slug })
+}
+
+export async function getProductSlugs() {
+  return client.fetch(`*[_type == "product"]{ "slug": slug.current }`)
+}
+
+export async function getProducts() {
+  return client.fetch(`*[_type == "product"]{ _id, title, "slug": slug.current, price, condition, "imageUrl": mainImage.asset->url }`)
+}
+
+export async function getSitemapData() {
+  const products = await client.fetch(`*[_type == "product"]{ "slug": slug.current, _updatedAt }`)
+  const categories = await client.fetch(`*[_type == "category"]{ "slug": slug.current, _updatedAt }`)
+  return { products, categories }
 }
