@@ -150,7 +150,7 @@ export default async function ProductPage({ params }: PageProps) {
                 <li aria-hidden="true">/</li>
                 <li>
                   <Link
-                    href={`/kategori/${product.category.slug}`}
+                    href={`/kategoriler/${product.category.slug}`}
                     className="hover:text-[#2C1A1D] hover:underline"
                   >
                     {product.category.title}
@@ -242,7 +242,7 @@ export default async function ProductPage({ params }: PageProps) {
                   <dt className="text-[#2C1A1D]/60">Kategori</dt>
                   <dd className="font-medium">
                     <Link
-                      href={`/kategori/${product.category.slug}`}
+                      href={`/kategoriler/${product.category.slug}`}
                       className="underline-offset-2 hover:underline"
                     >
                       {product.category.title}

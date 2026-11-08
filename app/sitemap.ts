@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticPages: SitemapEntry[] = [
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },
+    { url: `${SITE_URL}/kategoriler`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/hizmetler`, changeFrequency: "weekly", priority: 0.9 },
   ];
 
@@ -26,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dinamik kategori sayfaları
   const categoryEntries = categories.map(
     (item): SitemapEntry => ({
-      url: `${SITE_URL}/kategori/${item.slug}`,
+      url: `${SITE_URL}/kategoriler/${item.slug}`,
       lastModified: new Date(item.updatedAt),
       changeFrequency: "daily",
       priority: 0.8,

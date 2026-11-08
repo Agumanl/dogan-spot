@@ -12,7 +12,7 @@ const logoFont = Plus_Jakarta_Sans({
 });
 
 const NAV_LINKS = [
-  { label: "Kategoriler", href: "/#kategoriler" },
+  { label: "Kategoriler", href: "/kategoriler" },
   { label: "Hizmetler", href: "/hizmetler" },
   { label: "Hakkımızda", href: "/#hakkimizda" },
   { label: "İletişim", href: "/#iletisim" },
@@ -208,7 +208,7 @@ export function Header({ categories = [] }: HeaderProps) {
             {categories.map((category) => (
               <li key={category.slug} className="shrink-0 snap-start">
                 <a
-                  href={`/kategori/${category.slug}`}
+                  href={`/kategoriler/${category.slug}`}
                   className={`inline-flex whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${focusRing} ${
                     category.categoryType === "service"
                       ? "border-[#8D6E63] bg-[#8D6E63]/25 text-[#F5EBE0] hover:bg-[#8D6E63]/40"

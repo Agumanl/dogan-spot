@@ -56,3 +56,8 @@ export interface Product {
   /** ISO tarih, "En yeni" sıralaması için (Sanity'nin _createdAt alanı) */
   createdAt: string;
 }
+
+/** Bir kategori ve ona bağlı ürünler (kategori detay sayfası için). */
+export interface CategoryWithProducts extends CategorySummary {
+  products: Product[];
+}

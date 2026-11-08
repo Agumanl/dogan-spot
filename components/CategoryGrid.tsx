@@ -1,33 +1,9 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Banknote,
-  BadgeCheck,
-  Briefcase,
-  House,
-  Layers,
-  Package,
-  Sofa,
-  Truck,
-  Tv,
-  WashingMachine,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { getCategoryIcon } from "@/lib/category-icons";
 import { serif } from "@/lib/fonts";
 import { productImageUrl } from "@/sanity/lib/image";
 import type { CategorySummary } from "@/types/product";
-
-// Bilinen kategori adresleri için ikonlar. Tanınmayan adresler genel ikon kullanır.
-const ICONS: Record<string, LucideIcon> = {
-  "beyaz-esya": WashingMachine,
-  mobilya: Sofa,
-  tv: Tv,
-  "hali-kilim": Layers,
-  "buro-esyasi": Briefcase,
-  "komple-ev-esyasi-alanlar": House,
-  "adresten-nakit-esya-alimi": Banknote,
-  "ucretsiz-ekspertiz-nakliye": Truck,
-};
 
 interface CategoryGridProps {
   categories: CategorySummary[];
@@ -52,28 +28,37 @@ export function CategoryGrid({ categories, counts }: CategoryGridProps) {
           aria-labelledby="kategoriler-baslik"
           className="mx-auto max-w-6xl scroll-mt-24 px-4 pt-14 md:pt-20"
         >
-          <div className="max-w-2xl">
-            <h2
-              id="kategoriler-baslik"
-              className={`${serif.className} text-3xl font-semibold tracking-tight sm:text-4xl`}
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="max-w-2xl">
+              <h2
+                id="kategoriler-baslik"
+                className={`${serif.className} text-3xl font-semibold tracking-tight sm:text-4xl`}
+              >
+                Satılık Ürün Kategorileri
+              </h2>
+              <p className="mt-2 text-[#2C1A1D]/70">
+                Aradığınız eşyaya kategoriden ulaşın.
+              </p>
+            </div>
+            <Link
+              href="/kategoriler"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#8D6E63] hover:text-[#2C1A1D] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2C1A1D]"
             >
-              Satılık Ürün Kategorileri
-            </h2>
-            <p className="mt-2 text-[#2C1A1D]/70">
-              Aradığınız eşyaya kategoriden ulaşın.
-            </p>
+              Tüm kategoriler
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
 
           <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {productCategories.map((category) => {
-              const Icon = ICONS[category.slug] ?? Package;
+              const Icon = getCategoryIcon(category.slug, category.categoryType);
               const count = counts?.[category.slug];
               const hasImage = Boolean(category.image?.asset);
 
               return (
                 <li key={category.id}>
                   <Link
-                    href={`/kategori/${category.slug}`}
+                    href={`/kategoriler/${category.slug}`}
                     className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#2C1A1D]/10 bg-white transition-colors hover:border-[#2C1A1D] hover:bg-[#2C1A1D] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2C1A1D]"
                   >
                     {/* Görsel alanı: görsel yoksa ikon gösterilir */}
@@ -146,11 +131,11 @@ export function CategoryGrid({ categories, counts }: CategoryGridProps) {
 
             <ul className="mt-8 grid gap-3 sm:gap-4 md:grid-cols-3">
               {serviceCategories.map((service) => {
-                const Icon = ICONS[service.slug] ?? BadgeCheck;
+                const Icon = getCategoryIcon(service.slug, service.categoryType);
                 return (
                   <li key={service.id}>
                     <Link
-                      href={`/kategori/${service.slug}`}
+                      href={`/kategoriler/${service.slug}`}
                       className="group flex h-full items-start gap-4 rounded-2xl border border-[#F5EBE0]/15 bg-[#F5EBE0]/5 p-4 transition-colors hover:border-[#F5EBE0]/40 hover:bg-[#F5EBE0]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F5EBE0] sm:p-5"
                     >
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#8D6E63] bg-[#3A2428]">

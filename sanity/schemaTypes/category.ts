@@ -17,7 +17,7 @@ export const categoryType = defineType({
       name: "slug",
       title: "Slug (URL)",
       type: "slug",
-      description: "Sitedeki adres: /kategori/slug. 'Generate' düğmesine basın.",
+      description: "Sitedeki adres: /kategoriler/slug. 'Generate' düğmesine basın.",
       options: { source: "title", maxLength: 96, slugify: turkishSlugify },
       validation: (rule) => rule.required(),
     }),

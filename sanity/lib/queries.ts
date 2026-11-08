@@ -1,6 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { client } from "@/sanity/lib/client";
-import type { CategorySummary, Product } from "@/types/product";
+import type {
+  CategorySummary,
+  CategoryWithProducts,
+  Product,
+} from "@/types/product";
 import type { Service, ServiceSummary } from "@/types/service";
 
 // ───────── Ortak alan listeleri ─────────
@@ -55,6 +59,13 @@ const CATEGORIES_QUERY = `*[_type == "category" && defined(slug.current)]
   | order(coalesce(order, 999) asc, title asc) { ${CATEGORY_FIELDS} }`;
 
 const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == $slug][0] { ${CATEGORY_FIELDS} }`;
+
+// Kategori detayı ve o kategoriye bağlı yayınlanmış ürünler tek sorguda gelir.
+const CATEGORY_WITH_PRODUCTS_QUERY = `*[_type == "category" && slug.current == $slug][0] {
+  ${CATEGORY_FIELDS},
+  "products": *[_type == "product" && defined(slug.current) && references(^._id)]
+    | order(_createdAt desc) { ${PRODUCT_FIELDS} }
+}`;
 
 const CATEGORY_SLUGS_QUERY = `*[_type == "category" && defined(slug.current)].slug.current`;
 
@@ -122,6 +133,20 @@ export async function getCategoryBySlug(
   cacheTag("categories");
 
   return client.fetch<CategorySummary | null>(CATEGORY_BY_SLUG_QUERY, { slug });
+}
+
+/** Kategori detayı + o kategorideki ürünler (yoksa null). */
+export async function getCategoryWithProducts(
+  slug: string,
+): Promise<CategoryWithProducts | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("categories", "products");
+
+  return client.fetch<CategoryWithProducts | null>(
+    CATEGORY_WITH_PRODUCTS_QUERY,
+    { slug },
+  );
 }
 
 /** Tüm hizmetler (liste sayfası için). */
