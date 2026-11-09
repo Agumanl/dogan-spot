@@ -8,7 +8,6 @@ import {
   Card,
   Dialog,
   Flex,
-  Stack,
   Text,
   TextArea,
 } from "@sanity/ui";
@@ -82,7 +81,7 @@ export function HtmlImportInput(props: ArrayOfObjectsInputProps) {
   }
 
   return (
-    <Stack space={3}>
+    <Flex direction="column" gap={3}>
       <Flex justify="flex-end">
         <Button
           text="HTML kodundan içe aktar"
@@ -122,7 +121,7 @@ export function HtmlImportInput(props: ArrayOfObjectsInputProps) {
           }
         >
           <Box padding={4}>
-            <Stack space={4}>
+            <Flex direction="column" gap={4}>
               <Text size={1} muted>
                 Makalenin HTML kodunu aşağıya yapıştırın. Desteklenenler:
                 başlıklar (h1-h6; h1 başlığı H2, h4-h6 ise H3 olur), paragraf,
@@ -146,10 +145,10 @@ export function HtmlImportInput(props: ArrayOfObjectsInputProps) {
                   <Text size={1}>{message}</Text>
                 </Card>
               )}
-            </Stack>
+            </Flex>
           </Box>
         </Dialog>
       )}
-    </Stack>
+    </Flex>
   );
 }
