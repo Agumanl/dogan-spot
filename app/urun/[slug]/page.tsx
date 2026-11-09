@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductGallery } from "@/components/ProductGallery";
+import { ServiceBody } from "@/components/ServiceBody";
 import { SiteShell } from "@/components/SiteShell";
 import { serif } from "@/lib/fonts";
 import { formatPrice } from "@/lib/format";
@@ -262,6 +263,16 @@ export default async function ProductPage({ params }: PageProps) {
             </dl>
           </div>
         </div>
+
+        {/* Detaylı içerik (Studio'daki "Detaylı İçerik" alanı) */}
+        {product.content && product.content.length > 0 && (
+          <section
+            aria-label="Ürün detayları"
+            className="mt-14 max-w-3xl border-t border-[#2C1A1D]/10 pt-10"
+          >
+            <ServiceBody value={product.content} />
+          </section>
+        )}
 
         {/* Benzer ürünler */}
         {related.length > 0 && (

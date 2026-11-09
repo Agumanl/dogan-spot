@@ -1,3 +1,5 @@
+import type { PortableTextBlock } from "sanity";
+
 // Bu liste, Sanity ürün şemasındaki (sanity/schemaTypes/product.ts) seçeneklerle birebir aynı olmalı.
 export const CONDITIONS = [
   "Sıfır / Kutulu",
@@ -30,6 +32,8 @@ export interface CategorySummary {
   slug: string;
   categoryType: CategoryType;
   description?: string | null;
+  /** Detaylı makale (Portable Text). Yalnızca kategori detay sorgularında gelir. */
+  content?: PortableTextBlock[] | null;
   image?: ProductImage | null;
 }
 
@@ -52,6 +56,8 @@ export interface Product {
   age?: string | null;
   mainImage?: ProductImage | null;
   gallery: ProductImage[];
+  /** Detaylı içerik (Portable Text). Yalnızca ürün detay sorgusunda gelir. */
+  content?: PortableTextBlock[] | null;
   category: CategoryRef | null;
   /** ISO tarih, "En yeni" sıralaması için (Sanity'nin _createdAt alanı) */
   createdAt: string;

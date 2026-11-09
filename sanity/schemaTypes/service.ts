@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { HtmlImportInput } from "../components/HtmlImportInput";
 import { turkishSlugify } from "./slugify";
 
 export const serviceType = defineType({
@@ -34,7 +35,9 @@ export const serviceType = defineType({
       title: "İçerik (Makale)",
       type: "array",
       description:
-        "Hizmet sayfasındaki detaylı SEO metni. Başlıklar için H2/H3 kullanın.",
+        "Hizmet sayfasındaki detaylı SEO metni. Başlıklar için H2/H3 kullanın. Hazır HTML kodunuz varsa sağ üstteki 'HTML kodundan içe aktar' düğmesini kullanın.",
+      // Düzenleyicinin üstüne HTML'den içe aktarma düğmesi ekler
+      components: { input: HtmlImportInput },
       of: [
         defineArrayMember({
           type: "block",

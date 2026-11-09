@@ -36,6 +36,12 @@ const CATEGORY_FIELDS = `
   image{ ${IMAGE_FIELDS} }
 `;
 
+// Detay sayfaları için: kısa alanlara ek olarak makale metni de gelir (listelerde çekilmez)
+const CATEGORY_DETAIL_FIELDS = `
+  ${CATEGORY_FIELDS},
+  "content": coalesce(content, [])
+`;
+
 const SERVICE_SUMMARY_FIELDS = `
   "id": _id,
   title,
@@ -51,18 +57,21 @@ export const PRODUCTS_QUERY = `*[_type == "product" && defined(slug.current)]
 const PRODUCTS_BY_CATEGORY_QUERY = `*[_type == "product" && defined(slug.current) && category->slug.current == $categorySlug]
   | order(_createdAt desc) { ${PRODUCT_FIELDS} }`;
 
-const PRODUCT_BY_SLUG_QUERY = `*[_type == "product" && slug.current == $slug][0] { ${PRODUCT_FIELDS} }`;
+const PRODUCT_BY_SLUG_QUERY = `*[_type == "product" && slug.current == $slug][0] {
+  ${PRODUCT_FIELDS},
+  "content": coalesce(content, [])
+}`;
 
 const PRODUCT_SLUGS_QUERY = `*[_type == "product" && defined(slug.current)].slug.current`;
 
 const CATEGORIES_QUERY = `*[_type == "category" && defined(slug.current)]
   | order(coalesce(order, 999) asc, title asc) { ${CATEGORY_FIELDS} }`;
 
-const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == $slug][0] { ${CATEGORY_FIELDS} }`;
+const CATEGORY_BY_SLUG_QUERY = `*[_type == "category" && slug.current == $slug][0] { ${CATEGORY_DETAIL_FIELDS} }`;
 
 // Kategori detayı ve o kategoriye bağlı yayınlanmış ürünler tek sorguda gelir.
 const CATEGORY_WITH_PRODUCTS_QUERY = `*[_type == "category" && slug.current == $slug][0] {
-  ${CATEGORY_FIELDS},
+  ${CATEGORY_DETAIL_FIELDS},
   "products": *[_type == "product" && defined(slug.current) && references(^._id)]
     | order(_createdAt desc) { ${PRODUCT_FIELDS} }
 }`;

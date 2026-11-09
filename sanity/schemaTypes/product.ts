@@ -1,4 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { HtmlImportInput } from "../components/HtmlImportInput";
+import { articleBlock } from "./articleBlock";
 import { turkishSlugify } from "./slugify";
 
 // Bu değerler, sitedeki types/product.ts içindeki CONDITIONS ile birebir aynı olmalı.
@@ -72,11 +74,22 @@ export const productType = defineType({
     }),
     defineField({
       name: "description",
-      title: "Açıklama",
+      title: "Kısa Açıklama",
       type: "text",
       rows: 6,
-      description: "Kusurlar, ölçüler ve kullanım izlerini açıkça yazın.",
+      description:
+        "Düz metin. Ürün kartlarında ve Google sonuçlarında görünür. Kusurlar, ölçüler ve kullanım izlerini açıkça yazın. Başlıklı uzun metin için aşağıdaki 'Detaylı İçerik' alanını kullanın.",
       validation: (rule) => rule.required().min(10).max(1500),
+    }),
+    defineField({
+      name: "content",
+      title: "Detaylı İçerik",
+      type: "array",
+      description:
+        "İsteğe bağlı. Ürün sayfasında açıklamanın altında görünen zengin metin. Başlıklar için H2/H3, ayrıca liste, kalın ve bağlantı kullanabilirsiniz. Hazır HTML kodunuz varsa sağ üstteki 'HTML kodundan içe aktar' düğmesini kullanın.",
+      // Düzenleyicinin üstüne HTML'den içe aktarma düğmesi ekler
+      components: { input: HtmlImportInput },
+      of: [articleBlock],
     }),
     defineField({
       name: "mainImage",
